@@ -1,0 +1,72 @@
+#include <SPI.h>     
+#include "RF24.h"     
+#include "nRF24L01.h"
+#include <Wire.h>
+#include "SSD1306Ascii.h"
+#include "SSD1306AsciiWire.h"
+
+
+#define buzzerPin 2   
+#define threshold 90 
+
+// 0X3C+SA0 - 0x3C or 0x3D
+#define I2C_ADDRESS 0x3C
+
+// Define proper RST_PIN if required.
+#define RST_PIN -1
+
+SSD1306AsciiWire oled;
+
+int led1 = 4;         
+
+int data[1];         
+
+
+RF24 radio (10,9);   
+
+
+const uint64_t pipe = 0xE8E8F0F0E1LL; 
+
+void setup() {
+   Wire.begin();
+  Wire.setClock(400000L);
+
+#if RST_PIN >= 0
+  oled.begin(&Adafruit128x64, I2C_ADDRESS, RST_PIN);
+#else // RST_PIN >= 0
+  oled.begin(&Adafruit128x64, I2C_ADDRESS);
+#endif // RST_PIN >= 0
+
+  oled.setFont(Adafruit5x7);
+
+  uint32_t m = micros();
+  oled.clear();
+  oled.println("Temperature LM35 !");
+  pinMode(led1, OUTPUT);         
+  Serial.begin(9600);             
+  radio.begin();                 
+  radio.openReadingPipe(1, pipe);
+  radio.startListening();
+
+}
+
+void loop() {
+  if (radio.available () ) {         
+    radio.read(data, sizeof(data)); 
+    Serial.println(data[0]/2.2);         
+    oled.println(data[0]/2.2);
+    if(data[0] > threshold) {       
+      tone(buzzerPin, 440);         
+      digitalWrite (led1, HIGH);   
+      delay(400);
+      noTone(buzzerPin);
+      digitalWrite(led1, LOW);
+      delay(50);
+    }
+    else {                       
+      noTone (buzzerPin);       
+      digitalWrite(led1, LOW);  
+    
+    }
+  }
+    }

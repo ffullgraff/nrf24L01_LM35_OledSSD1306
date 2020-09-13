@@ -1,0 +1,45 @@
+#include <SPI.h>     
+#include "RF24.h"     
+#include "nRF24L01.h"
+
+#define buzzerPin 2   
+#define threshold 90 
+
+int led1 = 4;         
+
+int data[1];         
+
+
+RF24 radio (10,9);   
+
+
+const uint64_t pipe = 0xE8E8F0F0E1LL; 
+
+void setup() {
+  pinMode(led1, OUTPUT);         
+  Serial.begin(9600);             
+  radio.begin();                 
+  radio.openReadingPipe(1, pipe);
+  radio.startListening();
+
+}
+
+void loop() {
+  if (radio.available () ) {         
+    radio.read(data, sizeof(data)); 
+    Serial.println(data[0]/2.2);         
+
+    if(data[0] > threshold) {       
+      tone(buzzerPin, 440);         
+      digitalWrite (led1, HIGH);   
+      delay(400);
+      noTone(buzzerPin);
+      digitalWrite(led1, LOW);
+      delay(50);
+    }
+    else {                       
+      noTone (buzzerPin);       
+      digitalWrite(led1, LOW);   
+    }
+  }
+    }

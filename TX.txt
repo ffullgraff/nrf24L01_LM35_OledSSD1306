@@ -1,0 +1,27 @@
+#include <SPI.h>       
+#include "RF24.h"   
+#include "nRF24L01.h"
+
+const int lm35Pin = 0;
+
+int data[1];         
+
+
+RF24 radio(10,9); 
+
+
+const uint64_t pipe = 0xE8E8F0F0E1LL;
+
+void setup(void) {
+  Serial.begin(9600);           
+  pinMode (lm35Pin, INPUT);     
+  radio.begin();               
+  radio.openWritingPipe(pipe); 
+
+}
+
+void loop(void) {//
+  data [0] = analogRead(lm35Pin);   
+  Serial.println(data [0]);         
+  radio.write(data, sizeof(data)); 
+}
